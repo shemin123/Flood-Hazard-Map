@@ -1,0 +1,330 @@
+var _0x4f2d = {};
+_0x4f2d.α = 'Tamil Nadu';
+_0x4f2d.β = 'Chennai';
+_0x4f2d.δ = {};
+_0x4f2d.δ.ζ = "JRC/GSW1_4/GlobalSurfaceWater";
+_0x4f2d.δ.η = "USGS/SRTMGL1_003";
+_0x4f2d.δ.θ = "LANDSAT/LC08/C02/T1_L2";
+_0x4f2d.ι = {};
+_0x4f2d.ι.κ = 30;
+_0x4f2d.ι.λ = 80;
+_0x4f2d.ι.μ = 1500;
+_0x4f2d.ι.ν = 1000;
+_0x4f2d.ι.ξ = 500;
+_0x4f2d.ι.ο = 200;
+_0x4f2d.ι.π = 5;
+
+function _λ(x,y) {
+    return ee
+        .Filter
+        .eq(x,y);
+}
+
+function _Ω(i,n,x,p) {
+    return {
+        min: n,
+        max: x,
+        palette: p
+    };
+}
+
+function _Δ(x) {
+    return x
+        .mask();
+}
+
+function _Φ(x) {
+    return x
+        .gt(
+            _0x4f2d
+                .ι
+                .λ
+        );
+}
+
+function _Ψ(x) {
+    return x
+        .neq(0);
+}
+
+var _init = ee
+    .FeatureCollection(
+        "FAO/GAUL/2015/level2"
+    )
+    .filter(
+        _λ(
+            'ADM1_NAME',
+            _0x4f2d.α
+        )
+    )
+    .filter(
+        _λ(
+            'ADM2_NAME',
+            _0x4f2d.β
+        )
+    );
+
+function _χ(r,f) {
+    return ee
+        .Image(
+            _0x4f2d
+                .δ[f]
+        )
+        .clip(r);
+}
+
+var _proc = (function() {
+    var _d = {};
+    
+    _d.ω = _χ(
+        _init,
+        'ζ'
+    )
+    .select(
+        'occurrence'
+    );
+    
+    _d.ϕ = _χ(
+        _init,
+        'η'
+    );
+    
+    _d.ρ = ee
+        .ImageCollection(
+            _0x4f2d
+                .δ
+                .θ
+        );
+    
+    var _w = _Φ(
+        _d.ω
+    );
+    
+    var _t = _w
+        .fastDistanceTransform()
+        .divide(
+            _0x4f2d
+                .ι
+                .κ
+        )
+        .clip(
+            _init
+        )
+        .reproject(
+            'EPSG:4326',
+            null,
+            _0x4f2d
+                .ι
+                .κ
+        );
+    
+    var _result = {};
+    _result.σ = _d;
+    _result.τ = {};
+    _result.τ.υ = _w;
+    _result.τ.φ = _t;
+    _result.τ.χ = _t
+        .updateMask(
+            _Ψ(_t)
+                .and(
+                    _d.ϕ
+                        .mask()
+                )
+        );
+    
+    return _result;
+})();
+
+function _ψ(d,m) {
+    return d
+        .expression(
+            m.ε,
+            m.ζ
+        )
+        .rename(
+            m.η
+        );
+}
+
+var _ω = (function() {
+    var _n = _proc
+        .σ
+        .ρ
+        .filterBounds(
+            _init
+        )
+        .filterDate(
+            '2023-01-01',
+            '2023-12-31'
+        )
+        .select(
+            ['SR_B.*'],
+            ['B1','B2','B3','B4','B5','B6','B7']
+        )
+        .median()
+        .multiply(
+            0.0000275
+        )
+        .add(
+            -0.2
+        )
+        .clip(
+            _init
+        );
+    
+    var _result = {};
+    
+    _result.α = _ψ(
+        _n,
+        {
+            ε: '(NIR-RED)/(NIR+RED)',
+            ζ: {
+                'NIR': _n.select('B5'),
+                'RED': _n.select('B4')
+            },
+            η: 'NDVI'
+        }
+    );
+    
+    _result.β = _ψ(
+        _n,
+        {
+            ε: '(GREEN-NIR)/(GREEN+NIR)',
+            ζ: {
+                'GREEN': _n.select('B3'),
+                'NIR': _n.select('B5')
+            },
+            η: 'NDWI'
+        }
+    );
+    
+    return _result;
+})();
+
+function _ϕ(i,c) {
+    return i
+        .where(
+            i.gt(c[0]),
+            1
+        )
+        .where(
+            i.gt(c[1])
+                .and(
+                    i.lte(c[0])
+                ),
+            2
+        )
+        .where(
+            i.gt(c[2])
+                .and(
+                    i.lte(c[1])
+                ),
+            3
+        )
+        .where(
+            i.gt(c[3])
+                .and(
+                    i.lte(c[2])
+                ),
+            4
+        )
+        .where(
+            i.lte(c[3]),
+            5
+        );
+}
+
+var _ρ = (function() {
+    var _s = [
+        _ϕ(
+            _proc.τ.χ,
+            [
+                _0x4f2d.ι.μ,
+                _0x4f2d.ι.ν,
+                _0x4f2d.ι.ξ,
+                _0x4f2d.ι.ο
+            ]
+        ),
+        _ϕ(
+            _proc.σ.ϕ,
+            [30,20,10,5]
+        ),
+        _ϕ(
+            _ω.α,
+            [0.6,0.4,0.2,0.1]
+        ),
+        _ϕ(
+            _ω.β,
+            [0.5,0.3,0,-0.3]
+        )
+    ];
+    
+    return _s
+        .reduce(
+            function(a,b) {
+                return a.add(b);
+            }
+        );
+})();
+
+var _σ = _ρ
+    .where(
+        _ρ.gt(20),
+        5
+    )
+    .where(
+        _ρ.gt(15)
+            .and(
+                _ρ.lte(20)
+            ),
+        4
+    )
+    .where(
+        _ρ.gt(10)
+            .and(
+                _ρ.lte(15)
+            ),
+        3
+    )
+    .where(
+        _ρ.gt(5)
+            .and(
+                _ρ.lte(10)
+            ),
+        2
+    )
+    .where(
+        _ρ.lte(5),
+        1
+    );
+
+Map.addLayer(
+    _σ,
+    _Ω(
+        _σ,
+        1,
+        5,
+        ['blue','cyan','green','yellow','red']
+    ),
+    'θ'
+);
+
+Map.centerObject(
+    _init,
+    11
+);
+
+var _τ = _σ
+    .reduceRegion({
+        reducer: ee
+            .Reducer
+            .frequencyHistogram(),
+        geometry: _init,
+        scale: 30,
+        maxPixels: 1e9
+    });
+
+print(
+    'ζ:',
+    _τ
+);
